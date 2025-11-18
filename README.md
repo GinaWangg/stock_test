@@ -62,8 +62,12 @@ npm install
 
 2. 設定環境變數：
 ```bash
-# .env.local
-NEXT_PUBLIC_API_BASE_URL=http://localhost:8000
+# 複製範例檔案
+cp .env.local.example .env.local
+
+# 編輯 .env.local 設定後端 API URL
+# 本地開發: NEXT_PUBLIC_API_BASE_URL=http://localhost:8000
+# Codespaces: 使用轉發的端口 URL（見下方說明）
 ```
 
 3. 啟動開發服務器：
@@ -72,6 +76,40 @@ npm run dev
 ```
 
 應用將在 http://localhost:3000 運行
+
+### 🚀 在 GitHub Codespaces 中運行
+
+如果您在 Codespaces 中運行，需要特別設定：
+
+1. **啟動後端**（在終端機 1）：
+```bash
+cd backend
+pip install -r requirements.txt
+python app/scripts/import_fixtures.py
+uvicorn app.main:app --host 0.0.0.0 --port 8000
+```
+
+2. **取得後端 URL**：
+   - 當後端啟動後，Codespaces 會自動轉發 port 8000
+   - 點擊 VS Code 底部的 "PORTS" 標籤
+   - 找到 port 8000，複製其轉發的 URL（類似：`https://username-repo-abc123-8000.app.github.dev`）
+
+3. **設定前端**（在終端機 2）：
+```bash
+cd frontend
+npm install
+
+# 建立 .env.local 並設定後端 URL
+echo "NEXT_PUBLIC_API_BASE_URL=<貼上剛才複製的 URL>" > .env.local
+
+npm run dev
+```
+
+4. **訪問應用**：
+   - 前端會在 port 3000 啟動
+   - 在 "PORTS" 標籤中找到 port 3000，點擊開啟瀏覽器
+
+**重要提示**：每次 Codespace 重新啟動，轉發的 URL 可能會改變，需要更新 `.env.local`
 
 ## 資料庫架構
 

@@ -21,6 +21,8 @@ Next.js frontend for Taiwan stock revenue observation tool.
 
 ## Setup
 
+### Local Development
+
 1. Install dependencies:
 ```bash
 npm install
@@ -28,7 +30,10 @@ npm install
 
 2. Configure environment:
 ```bash
-# Create .env.local
+# Copy example file
+cp .env.local.example .env.local
+
+# Edit .env.local
 NEXT_PUBLIC_API_BASE_URL=http://localhost:8000
 ```
 
@@ -41,6 +46,36 @@ npm run dev
 ```
 http://localhost:3000
 ```
+
+### GitHub Codespaces
+
+When running in Codespaces, you need to use the forwarded port URL for the backend:
+
+1. Start the backend first (in backend directory):
+```bash
+uvicorn app.main:app --host 0.0.0.0 --port 8000
+```
+
+2. Get the backend forwarded URL:
+   - Click the "PORTS" tab in VS Code (bottom panel)
+   - Find port 8000 and copy the forwarded URL
+   - It will look like: `https://username-repo-abc123-8000.app.github.dev`
+
+3. Configure frontend environment:
+```bash
+# Create .env.local with the forwarded URL
+echo "NEXT_PUBLIC_API_BASE_URL=https://your-forwarded-url-8000.app.github.dev" > .env.local
+```
+
+4. Install and run:
+```bash
+npm install
+npm run dev
+```
+
+5. Access the app through port 3000's forwarded URL
+
+**Note**: The forwarded URL changes each time Codespace restarts. Update `.env.local` accordingly.
 
 ## Build for Production
 
