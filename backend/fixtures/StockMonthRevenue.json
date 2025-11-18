@@ -45,6 +45,51 @@
     "revenue": 203000000000
   },
   {
+    "stock_id": "2357",
+    "revenue_yyyy_mm": "2024-10",
+    "revenue": 42186000000
+  },
+  {
+    "stock_id": "2357",
+    "revenue_yyyy_mm": "2024-09",
+    "revenue": 45823000000
+  },
+  {
+    "stock_id": "2357",
+    "revenue_yyyy_mm": "2024-08",
+    "revenue": 48567000000
+  },
+  {
+    "stock_id": "2357",
+    "revenue_yyyy_mm": "2024-07",
+    "revenue": 46234000000
+  },
+  {
+    "stock_id": "2357",
+    "revenue_yyyy_mm": "2024-06",
+    "revenue": 43890000000
+  },
+  {
+    "stock_id": "2357",
+    "revenue_yyyy_mm": "2024-05",
+    "revenue": 41567000000
+  },
+  {
+    "stock_id": "2357",
+    "revenue_yyyy_mm": "2023-10",
+    "revenue": 38945000000
+  },
+  {
+    "stock_id": "2357",
+    "revenue_yyyy_mm": "2023-09",
+    "revenue": 42156000000
+  },
+  {
+    "stock_id": "2357",
+    "revenue_yyyy_mm": "2023-08",
+    "revenue": 44789000000
+  },
+  {
     "stock_id": "2317",
     "revenue_yyyy_mm": "2024-10",
     "revenue": 733160000000

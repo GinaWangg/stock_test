@@ -8,7 +8,7 @@ from pathlib import Path
 # Add parent directory to path to import app modules
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from app.db.database import SessionLocal
+from app.db.database import SessionLocal, Base, engine
 from app.schemas.schemas import StockCreate, MonthlyRevenueCreate
 from app.crud import crud
 
@@ -43,6 +43,11 @@ def import_monthly_revenue(db, revenue_data):
 
 def main():
     """Main import function."""
+    # Create all tables first
+    print("Creating database tables...")
+    Base.metadata.create_all(bind=engine)
+    print("Database tables created.\n")
+    
     db = SessionLocal()
     
     try:
