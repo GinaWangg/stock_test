@@ -1,36 +1,305 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Stock Revenue Tracking Frontend
 
-## Getting Started
+Next.js frontend for Taiwan stock revenue observation tool.
 
-First, run the development server:
+## Features
 
+- 📊 Responsive watchlist display (table + cards)
+- ➕ Add/delete stocks from watchlist
+- 💹 Real-time data updates with SWR
+- 📱 Mobile-first design
+- 🎨 Tailwind CSS styling
+- 🔄 Automatic data refresh (60s)
+
+## Tech Stack
+
+- Next.js 16 (App Router)
+- TypeScript
+- Tailwind CSS
+- SWR (data fetching)
+- Axios (HTTP client)
+
+## Setup
+
+1. Install dependencies:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Configure environment:
+```bash
+# Create .env.local
+NEXT_PUBLIC_API_BASE_URL=http://localhost:8000
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+3. Run development server:
+```bash
+npm run dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+4. Open browser:
+```
+http://localhost:3000
+```
 
-## Learn More
+## Build for Production
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npm run build
+npm start
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Project Structure
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```
+frontend/
+├── app/                    # Next.js App Router
+│   ├── layout.tsx         # Root layout
+│   ├── page.tsx           # Home page (watchlist)
+│   └── globals.css        # Global styles
+├── components/            # React components
+│   ├── AddStockModal.tsx  # Add stock dialog
+│   ├── StockCard.tsx      # Mobile card view
+│   ├── StockRow.tsx       # Desktop table row
+│   ├── WatchlistCards.tsx # Mobile cards container
+│   └── WatchlistTable.tsx # Desktop table
+├── lib/                   # Utilities
+│   ├── api.ts            # API client functions
+│   └── formatters.ts     # Data formatting utilities
+├── public/               # Static assets
+├── package.json
+└── tsconfig.json
+```
 
-## Deploy on Vercel
+## Components
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### WatchlistTable (Desktop)
+Table layout for large screens showing:
+- Stock ID and name
+- Last month revenue + YoY
+- Previous month revenue + YoY
+- Last quarter revenue + YoY
+- Current price + change %
+- Delete action
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### WatchlistCards (Mobile)
+Card layout for small screens (<768px) with same data in vertical format.
+
+### StockRow
+Individual table row component with formatted data.
+
+### StockCard
+Individual card component for mobile view.
+
+### AddStockModal
+Modal dialog for adding stocks with:
+- Stock ID input
+- Validation
+- Submit/Cancel actions
+
+## Data Formatting
+
+### Revenue Display
+```typescript
+formatRevenue(revenue: number | null): string
+// Input: 251466728000 (元)
+// Output: "2,514.67" (億元)
+```
+
+### Percentage Display
+```typescript
+formatPercentage(pct: number | null): string
+// Input: 5.18
+// Output: "+5.18%"
+// Input: -2.34
+// Output: "-2.34%"
+```
+
+### Color Coding
+- Positive YoY: Red (`text-red-600`)
+- Negative YoY: Green (`text-green-600`)
+- Null/Zero: Gray (`text-gray-500`)
+
+### Empty Values
+All null values display as "—"
+
+## API Integration
+
+### Get Watchlist
+```typescript
+import { watchlistApi } from '@/lib/api';
+
+const watchlist = await watchlistApi.getWatchlist('prev_month_desc');
+```
+
+### Add Stock
+```typescript
+const newItem = await watchlistApi.addToWatchlist('2330');
+```
+
+### Delete Stock
+```typescript
+await watchlistApi.removeFromWatchlist('2330');
+```
+
+### Update Stock
+```typescript
+const updated = await watchlistApi.updateWatchlistItem('2330', {
+  is_new: false,
+  order_index: 1
+});
+```
+
+## SWR Configuration
+
+```typescript
+useSWR('/api/watchlist', fetcher, {
+  refreshInterval: 60000,  // Auto-refresh every 60s
+  revalidateOnFocus: true, // Refresh on window focus
+});
+```
+
+## Responsive Breakpoints
+
+```css
+/* Mobile: < 768px */
+/* Desktop: >= 768px */
+```
+
+Layout automatically switches based on viewport width.
+
+## Styling
+
+Uses Tailwind CSS with custom configuration:
+
+```javascript
+// tailwind.config.js
+module.exports = {
+  content: [
+    './app/**/*.{js,ts,jsx,tsx,mdx}',
+    './components/**/*.{js,ts,jsx,tsx,mdx}',
+  ],
+  theme: {
+    extend: {},
+  },
+  plugins: [],
+}
+```
+
+## Environment Variables
+
+```bash
+# .env.local
+NEXT_PUBLIC_API_BASE_URL=http://localhost:8000
+```
+
+For production, set to actual backend URL:
+```bash
+NEXT_PUBLIC_API_BASE_URL=https://api.yourapp.com
+```
+
+## TypeScript Types
+
+### WatchlistItem
+```typescript
+interface WatchlistItem {
+  stock_id: string;
+  name_zh: string;
+  is_new: boolean;
+  order_index: number;
+  last_month_revenue: number | null;
+  last_month_yoy: number | null;
+  prev_month_revenue: number | null;
+  prev_month_yoy: number | null;
+  last_quarter_revenue: number | null;
+  last_quarter_yoy: number | null;
+  current_price: CurrentPrice | null;
+}
+```
+
+### CurrentPrice
+```typescript
+interface CurrentPrice {
+  price: number | null;
+  pct: number | null;
+  time: string | null;
+}
+```
+
+## Error Handling
+
+```typescript
+try {
+  await watchlistApi.addToWatchlist(stockId);
+  alert('成功新增股票');
+} catch (error: any) {
+  const message = error.response?.data?.detail || '新增失敗';
+  alert(`新增失敗: ${message}`);
+}
+```
+
+## Testing
+
+Run linter:
+```bash
+npm run lint
+```
+
+Type check:
+```bash
+npm run type-check  # (if configured)
+```
+
+## Performance
+
+- **SWR caching**: Reduces API calls
+- **Automatic revalidation**: Keeps data fresh
+- **Code splitting**: Next.js automatic optimization
+- **Image optimization**: Next.js Image component
+
+## Deployment
+
+### Vercel (Recommended)
+```bash
+vercel
+```
+
+### Docker
+```bash
+docker build -t stock-frontend .
+docker run -p 3000:3000 stock-frontend
+```
+
+### Static Export
+```bash
+npm run build
+# Deploy 'out' directory to static host
+```
+
+## Browser Support
+
+- Chrome/Edge (latest)
+- Firefox (latest)
+- Safari (latest)
+- Mobile browsers (iOS Safari, Chrome Mobile)
+
+## Accessibility
+
+- Semantic HTML
+- ARIA labels where needed
+- Keyboard navigation support
+- Screen reader friendly
+
+## Future Enhancements
+
+- [ ] Stock search with autocomplete
+- [ ] Price charts integration
+- [ ] News modal display
+- [ ] Excel export button
+- [ ] Dark mode support
+- [ ] PWA features
+- [ ] Internationalization (i18n)
+
+## License
+
+MIT
