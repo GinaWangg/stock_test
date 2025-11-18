@@ -5,8 +5,43 @@ from app.db.database import get_db
 from app.schemas import schemas
 from app.crud import crud
 from app.core.business_logic import build_watchlist_item_response
+from app.services.finmind_service import finmind_service
+import logging
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
+
+async def fetch_stock_data_background(stock_id: str):
+    """Background task to fetch revenue data for newly added stock."""
+    from app.db.database import SessionLocal
+    
+    db = SessionLocal()
+    try:
+        logger.info(f"Background fetch: Getting revenue data for {stock_id}")
+        
+        # Fetch revenue data from FinMind
+        revenue_data = await finmind_service.fetch_monthly_revenue(stock_id)
+        
+        # Store in database
+        for item in revenue_data:
+            revenue = schemas.MonthlyRevenueCreate(
+                stock_id=item["stock_id"],
+                revenue_yyyy_mm=item["revenue_yyyy_mm"],
+                revenue=item["revenue"],
+                revenue_year=item.get("revenue_year"),
+                revenue_month=item.get("revenue_month"),
+                source=item.get("source")
+            )
+            crud.upsert_monthly_revenue(db, revenue)
+        
+        logger.info(f"Background fetch: Stored {len(revenue_data)} revenue records for {stock_id}")
+        
+    except Exception as e:
+        logger.error(f"Background fetch error for {stock_id}: {e}")
+    finally:
+        db.close()
 
 
 @router.get("/watchlist", response_model=List[dict])
@@ -40,7 +75,7 @@ def get_watchlist(
 
 
 @router.post("/watchlist", status_code=201)
-def add_to_watchlist(
+async def add_to_watchlist(
     watchlist_item: schemas.WatchlistItemCreate,
     background_tasks: BackgroundTasks,
     db: Session = Depends(get_db)
@@ -68,8 +103,9 @@ def add_to_watchlist(
     # Create watchlist item
     db_item = crud.create_watchlist_item(db, watchlist_item)
     
-    # TODO: Add background task to fetch revenue and price data
-    # background_tasks.add_task(fetch_stock_data, db, watchlist_item.stock_id)
+    # Add background task to fetch revenue data
+    background_tasks.add_task(fetch_stock_data_background, watchlist_item.stock_id)
+    logger.info(f"Added background task to fetch data for {watchlist_item.stock_id}")
     
     # Return current state (might have empty fields until background task completes)
     response = build_watchlist_item_response(db, db_item)
