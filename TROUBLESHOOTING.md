@@ -1,5 +1,30 @@
 # Troubleshooting Guide / 問題排解指南
 
+## ⚠️ 最常見問題：Port Visibility 設定
+
+### 問題：在 Codespaces 中前端顯示「載入資料時發生錯誤」
+
+**症狀**: 
+- 後端正在運行
+- 已設定 .env.local
+- 但前端仍然無法連接
+
+**最可能的原因**: Port 8000 的 Visibility 設為 Private（預設值）
+
+**解決方法**（必做）:
+1. 點擊 VS Code 底部的 **「PORTS」** 標籤
+2. 找到 port **8000** 那一列
+3. 右鍵點擊該列
+4. 選擇 **「Port Visibility」** → **「Public」**
+5. 同樣將 port **3000** 也設為 **「Public」**
+
+**為什麼重要**: 
+- 預設情況下，Codespaces 的端口是 Private（只有你能訪問）
+- 前端在瀏覽器中運行，需要 Public 權限才能訪問後端
+- 即使設定了正確的 URL，Private 端口仍會被阻擋
+
+---
+
 ## 前端顯示「載入資料時發生錯誤」
 
 ### 問題描述
@@ -21,14 +46,35 @@ curl http://localhost:8000/health
 # 應該返回: {"status":"healthy"}
 ```
 
-#### 2. 環境變數未設定（Codespaces）
+#### 2. 環境變數未設定或設定錯誤（Codespaces）
 **症狀**: 在 GitHub Codespaces 中運行時出現錯誤
 
-**解決方法**:
+**檢查步驟**:
+```bash
+cd frontend
+
+# 檢查 .env.local 是否存在
+ls -la .env.local
+
+# 檢查內容
+cat .env.local
+
+# 應該顯示類似:
+# NEXT_PUBLIC_API_BASE_URL=https://xxx-8000.app.github.dev
+```
+
+**解決方法 A - 使用診斷腳本**:
+```bash
+cd frontend
+bash diagnose.sh  # 會顯示詳細診斷資訊
+```
+
+**解決方法 B - 手動設定**:
 1. 確認後端正在運行
 2. 取得後端的轉發 URL：
    - 點擊 VS Code 底部的 "PORTS" 標籤
    - 找到 port 8000
+   - **確認 Visibility 是 'Public'（非常重要！）**
    - 複製「Forwarded Address」欄位的 URL
    - 範例：`https://username-repo-abc123-8000.app.github.dev`
 
@@ -36,15 +82,27 @@ curl http://localhost:8000/health
 ```bash
 cd frontend
 
-# 手動建立 .env.local
+# 手動建立 .env.local（替換為你複製的 URL）
 echo "NEXT_PUBLIC_API_BASE_URL=https://your-forwarded-url-8000.app.github.dev" > .env.local
 
-# 或使用自動設定腳本
-bash setup-env.sh
+# 驗證設定
+cat .env.local
+
+# 測試連接
+curl $(cat .env.local | cut -d'=' -f2)/health
+# 應該返回: {"status":"healthy"}
 ```
 
 4. 重新啟動前端：
 ```bash
+# 停止前端 (Ctrl+C)
+npm run dev
+```
+
+**解決方法 C - 使用自動設定腳本**:
+```bash
+cd frontend
+bash setup-env.sh  # 自動偵測並設定
 npm run dev
 ```
 
